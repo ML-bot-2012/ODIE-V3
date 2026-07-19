@@ -62,7 +62,9 @@ python3 demo.py
 # Then type: controller | ball | person | stop | quit
 ```
 
-## Built by
+## Simulation
+
+![ODIE V3 in MuJoCo](https://github.com/user-attachments/assets/7133dadf-1f42-421e-8bb6-8c5567511d22)
 
 ## Built by
 
