@@ -1,88 +1,155 @@
-python
-#!/usr/bin/env python3
-"""
-ODIE Rerun Dashboard - Real-time telemetry visualization
-Logs robot state, IMU data, servo positions, mode, and performance metrics
-"""
+# odie_rerun.md
 
-import rerun as rr
-import numpy as np
-from datetime import datetime
+## Rerun Telemetry Logging
 
-# ============================================================================
-# RERUN INITIALIZATION
-# ============================================================================
+Real-time visualization dashboard for monitoring robot state, sensor data, and performance.
 
-def init_dashboard():
-    """Initialize Rerun dashboard."""
-    rr.init("ODIE Demo", spawn=True)
-    rr.log("world", rr.ViewCoordinates.RDF)
-    print("[RERUN] Dashboard initialized")
+### Overview
 
-# ============================================================================
-# LOGGING FUNCTIONS
-# ============================================================================
+Rerun SDK for streaming telemetry to http://localhost:8050 during deployment.
 
-def log_imu_data(timestamp, ax, ay, az, gx, gy, gz):
-    """Log IMU accelerometer and gyroscope data."""
-    accel = np.array([ax, ay, az])
-    gyro = np.array([gx, gy, gz])
+### Key Functions
+
+#### IMU Data
+
+```python
+def log_imu_data(imu_dict):
+    """Log accelerometer and gyroscope data."""
+    if not imu_dict:
+        return
     
-    rr.log(f"imu/accel/magnitude", rr.Scalar(np.linalg.norm(accel)))
-    rr.log(f"imu/accel/x", rr.Scalar(ax))
-    rr.log(f"imu/accel/y", rr.Scalar(ay))
-    rr.log(f"imu/accel/z", rr.Scalar(az))
+    # Acceleration
+    accel = np.array([imu_dict['ax'], imu_dict['ay'], imu_dict['az']])
+    rr.log("imu/accel", rr.Scalar(np.linalg.norm(accel)))
     
-    rr.log(f"imu/gyro/x", rr.Scalar(gx))
-    rr.log(f"imu/gyro/y", rr.Scalar(gy))
-    rr.log(f"imu/gyro/z", rr.Scalar(gz))
+    # Gyroscope
+    gyro = np.array([imu_dict['gx'], imu_dict['gy'], imu_dict['gz']])
+    rr.log("imu/gyro", rr.Scalar(np.linalg.norm(gyro)))
+    
+    # Individual axes
+    rr.log("imu/ax", rr.Scalar(imu_dict['ax']))
+    rr.log("imu/ay", rr.Scalar(imu_dict['ay']))
+    rr.log("imu/az", rr.Scalar(imu_dict['az']))
+```
 
+#### Servo Angles
+
+```python
 def log_servo_angles(angles):
-    """Log all 12 servo angles."""
-    rr.log("servos/all", rr.Bars(values=angles, label_values=[f"S{i}" for i in range(12)]))
+    """Log 12 servo angles."""
+    rr.log("servos/fl_hip", rr.Scalar(angles[0]))
+    rr.log("servos/fl_knee", rr.Scalar(angles[1]))
+    rr.log("servos/fl_ankle", rr.Scalar(angles[2]))
     
-    # Log by leg
-    rr.log("servos/FL_hip", rr.Scalar(angles[0]))
-    rr.log("servos/FL_knee", rr.Scalar(angles[1]))
-    rr.log("servos/FR_hip", rr.Scalar(angles[3]))
-    rr.log("servos/RR_hip", rr.Scalar(angles[6]))
-    rr.log("servos/RL_hip", rr.Scalar(angles[9]))
+    rr.log("servos/fr_hip", rr.Scalar(angles[3]))
+    rr.log("servos/fr_knee", rr.Scalar(angles[4]))
+    rr.log("servos/fr_ankle", rr.Scalar(angles[5]))
+    
+    rr.log("servos/rr_hip", rr.Scalar(angles[6]))
+    rr.log("servos/rr_knee", rr.Scalar(angles[7]))
+    rr.log("servos/rr_ankle", rr.Scalar(angles[8]))
+    
+    rr.log("servos/rl_hip", rr.Scalar(angles[9]))
+    rr.log("servos/rl_knee", rr.Scalar(angles[10]))
+    rr.log("servos/rl_ankle", rr.Scalar(angles[11]))
+```
 
-def log_mode(mode_name):
-    """Log current movement mode."""
-    rr.log("status/mode", rr.TextLog(mode_name))
+#### Mode Logging
 
+```python
+def log_mode(mode):
+    """Log current control mode."""
+    rr.log("status/mode", rr.TextLog(mode))
+```
+
+#### Fall Detection
+
+```python
 def log_fall_detected():
-    """Log fall detection event."""
-    rr.log("status/fall_alert", rr.TextLog("FALL DETECTED - Returning to STAND"))
+    """Log fall event."""
+    rr.log("status/fall", rr.TextLog("FALL DETECTED"))
+```
 
-def log_battery(voltage):
-    """Log battery voltage (if available)."""
-    rr.log("power/battery_v", rr.Scalar(voltage))
+#### Performance Metrics
 
-def log_fps(fps):
+```python
+def log_fps(fps_value):
     """Log control loop FPS."""
-    rr.log("performance/control_fps", rr.Scalar(fps))
+    rr.log("performance/fps", rr.Scalar(fps_value))
 
 def log_inference_time(ms):
-    """Log model inference time."""
+    """Log model inference latency."""
     rr.log("performance/inference_ms", rr.Scalar(ms))
 
-# ============================================================================
-# DASHBOARD LAYOUT
-# ============================================================================
+def log_battery(voltage):
+    """Log battery voltage."""
+    rr.log("power/battery_v", rr.Scalar(voltage))
+```
 
-def setup_layout():
-    """Configure Rerun dashboard layout."""
-    rr.log(
-        "world",
-        rr.BarChart(
-            values=[90, 120, 45, 90, 60, 135, 90, 60, 135, 90, 120, 45],
-        ),
-    )
+### Integration in demo.py
 
-if __name__ == '__main__':
-    init_dashboard()
-    print("[RERUN] Use this module's functions in demo.py to log data")
+```python
+import rerun as rr
 
-odie_rerun.py summary: Rerun telemetry logging functions. Provides wrappers to log IMU data (accel/gyro), servo angles, current mode, fall alerts, battery voltage, and performance metrics. Called from demo.py during main loop. Creates live dashboards for monitoring robot state in real-time.
+# Initialize
+rr.init("ODIE Demo")
+
+# In main loop
+if imu:
+    log_imu_data(imu)
+
+if angles:
+    log_servo_angles(angles)
+
+log_fps(current_fps)
+log_mode(current_mode)
+
+if fall_detected:
+    log_fall_detected()
+```
+
+### Dashboard Access
+
+Open browser: http://localhost:8050
+
+Displays real-time:
+- IMU acceleration/gyro
+- Servo angle values for all 12 joints
+- Current mode (walk, dance, sit, etc)
+- FPS and inference latency
+- Fall detection events
+- Battery voltage
+
+### Logging Frequency
+
+- IMU: 100 Hz (from sensor)
+- Servos: 100 Hz (from control loop)
+- Performance: 10 Hz (to avoid logging spam)
+- Events: On-demand (fall, mode switch)
+
+### Data Types
+
+```python
+rr.Scalar(float_value)      # Single scalar
+rr.TextLog(string_value)    # Text message
+rr.Tensor(np_array)         # Vector/matrix
+rr.Image(cv2_image)         # Frame (optional)
+```
+
+### Memory Efficiency
+
+Rerun buffers data locally; to reduce storage:
+
+```python
+# Log every 10th frame instead of every frame
+if iteration % 10 == 0:
+    log_imu_data(imu)
+```
+
+### Cleanup
+
+Automatic on demo.py exit; manual flush:
+
+```python
+rr.flush()
+```
