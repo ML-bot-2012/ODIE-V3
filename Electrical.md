@@ -19,23 +19,24 @@
 
 ---
 
-## Power Wiring (Simplified)
+## Power Wiring
 
-5V/10A USB-C PSU
-↓
-Female barrel jack (5.5×2.1mm)
-├─→ Red wire (+5V) → Pimoroni Servo2040 VCC rail
-└─→ Black wire (GND) → Pimoroni Servo2040 GND rail
+**PSU:** 5V/10A USB-C → Female barrel jack adapter (5.5×2.1mm)
 
-Pimoroni distributes:
-├─→ Servo header rail (12× MG996R)
-├─→ Pico (5V GPIO pin)
-└─→ Pi5 (5V GPIO header or USB-C)
+**Distribution:**
+- Red wire (+5V) → Servo2040 VCC rail
+- Black wire (GND) → Servo2040 GND rail
 
-[All GND connected at Servo2040]
+**Servo2040 distributes to:**
+- Servo header rail (12× MG996R via JST connectors)
+- Pico (5V GPIO/VBUS)
+- Pi5 (5V GPIO header or separate USB-C charger)
 
+**Ground:** All systems tied to common Servo2040 GND
 
-### Current Budget
+---
+
+## Current Budget
 
 | Component | Idle | Active | Notes |
 |-----------|------|--------|-------|
@@ -47,36 +48,33 @@ Pimoroni distributes:
 
 ---
 
-## Signal Wiring (Jumper Wires)
+## Signal Wiring (USB Serial)
 
-### Pi5 ↔ Servo2040 (UART Serial)
+### Pi5 ↔ Servo2040 (USB Serial)
 
-Raspberry Pi 5 Pimoroni Servo2040
-GPIO14 (TXD) ──yellow──→ GPIO0 (RX)
-GPIO15 (RXD) ←──orange── GPIO1 (TX)
-GND ──────black────────→ GND
+**Connection:**
+- Pi5 USB-A port → Servo2040 USB micro-B port
+- Via USB hub or direct (if available on Pi5)
 
-
-**Baud**: 115200, 8N1
+**Protocol:** 115200 baud, 8N1
 
 ![Servo2040 Terminal Layout](https://github.com/user-attachments/assets/a0842b76-f98d-42ff-bf20-5bf6054a5b1b)
 
-**Terminals 1–12**: Servo PWM + power connectors (no direct Pi5 connection—servos powered by PSU rail)
+**Terminals 1–12:** Servo PWM + power connectors (servos powered by PSU rail)
 
 ---
 
 ## Separate System: Pi Pico ↔ MPU6050 (I2C)
 
-**Pi Pico and MPU6050 form an independent IMU subsystem** communicating via I2C
+**Pi Pico and MPU6050 form an independent IMU subsystem**
 
-Pi Pico (RP2040)
-├─ GPIO4 (SDA) ──blue──→ MPU6050 SDA
-├─ GPIO5 (SCL) ──green─→ MPU6050 SCL
-├─ +5V (VBUS) ──red───→ MPU6050 VCC
-└─ GND ──────black─────→ MPU6050 GND
+**Connections:**
+- GPIO4 (SDA) → MPU6050 SDA
+- GPIO5 (SCL) → MPU6050 SCL
+- VBUS (+5V) → MPU6050 VCC
+- GND → MPU6050 GND
 
-
-**I2C Address**: MPU6050 at 0x68 (AD0 = GND)
+**I2C Address:** MPU6050 at 0x68 (AD0 = GND)
 
 ![Pico IMU Breakout Pinout](https://github.com/user-attachments/assets/b43fbf97-8600-4b40-8bda-c07da2d9e533)
 
@@ -84,14 +82,7 @@ Pi Pico (RP2040)
 
 ## IMU PCB (Pico-based)
 
-**Board**: Raspberry Pi Pico IMU breakout with soldered MPU6050
-
-**Connections**:
-- VCC → +5V (from Servo2040 PSU rail)
-- GND → common ground
-- GPIO4 (SDA) → I2C data line
-- GPIO5 (SCL) → I2C clock line
-- VBUS → 5V power input
+**Board:** Raspberry Pi Pico IMU breakout with soldered MPU6050
 
 **Components** (all onboard):
 - Pico RP2040 (ARM Cortex-M0+ dual-core)
@@ -105,7 +96,7 @@ Pi Pico (RP2040)
 
 | Component | Communication | Purpose |
 |-----------|---------------|---------|
-| Pi5 ↔ Servo2040 | UART serial | Motion command protocol |
+| Pi5 ↔ Servo2040 | USB serial | Motion command protocol |
 | Servo2040 ↔ Servos | PWM + power | Leg actuation (12 channels) |
 | Pi Pico ↔ MPU6050 | I2C | IMU telemetry (accel, gyro) |
 | All | +5V power | Fed from single PSU barrel jack |
@@ -117,16 +108,16 @@ Pi Pico (RP2040)
 ### Servo Header (Pimoroni Servo2040)
 
 **3-pin JST connector per servo:**
-- Pin 1: PWM signal (from Servo2040)
-- Pin 2: +5V (from PSU rail)
-- Pin 3: GND (common return)
+- Pin 1: PWM signal
+- Pin 2: +5V
+- Pin 3: GND
 
 Max cable length: 1m
 
 ### USB-C PSU to Barrel Jack
 
 **Female barrel jack (5.5×2.1mm):**
-- Soldered to 16AWG wires (short run, <20cm)
+- Soldered to 16AWG wires (<20cm)
 - Red to +5V, Black to GND
 - Connector rated 10A
 
@@ -134,13 +125,13 @@ Max cable length: 1m
 
 ## Power-On Sequence
 
-1. **PSU switched on** (USB-C → 5V DC)
-2. **Barrel jack powers Servo2040** (VCC + GND rails energized)
-3. **Pi5 boots** from GPIO 5V (or USB-C with separate charger)
-4. **Pico boots** from VBUS (connected to Servo2040 VCC)
-5. **UART handshake** (Pi5 → Servo2040 serial protocol)
-6. **I2C scan** (Pico queries MPU6050 at 0x68)
-7. **Ready** (accept motion commands)
+1. PSU switched on (USB-C → 5V DC)
+2. Barrel jack powers Servo2040 (VCC + GND rails energized)
+3. Pi5 boots from GPIO 5V (or separate USB-C charger)
+4. Pico boots from VBUS (Servo2040 VCC)
+5. USB handshake (Pi5 → Servo2040 serial port)
+6. I2C scan (Pico queries MPU6050 at 0x68)
+7. Ready (accept motion commands)
 
 ---
 
@@ -148,8 +139,8 @@ Max cable length: 1m
 
 ```bash
 ssh pi5 sudo shutdown -h now
-# Wait 10 seconds (Linux graceful halt)
+# Wait 10 seconds
 # Manually disconnect USB-C PSU
 ```
 
-**Critical**: Do NOT yank power (SD card corruption risk).
+**Critical:** Do NOT yank power (SD card corruption risk).
