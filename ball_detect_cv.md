@@ -1,99 +1,115 @@
-python
-#!/usr/bin/env python3
-"""
-Ball Detection - OpenCV HSV color tracking
-Detects colored ball and returns center position + area
-"""
+# ball_detect.md
 
-import cv2
-import numpy as np
+## Ball Detection with OpenCV
 
-# ============================================================================
-# COLOR RANGE (adjust for your ball color)
-# ============================================================================
+HSV color-based ball tracking for real-time detection and position estimation.
 
-# Red ball example
-LOWER_RED = np.array([0, 100, 100])
-UPPER_RED = np.array([10, 255, 255])
+### Overview
 
-LOWER_RED2 = np.array([170, 100, 100])
-UPPER_RED2 = np.array([180, 255, 255])
+Uses OpenCV to detect colored balls via HSV thresholding, morphological operations, and contour analysis. Outputs center coordinates and area of detected ball.
 
-# ============================================================================
-# DETECTION LOGIC
-# ============================================================================
+### Color Detection
 
+Red ball uses two HSV ranges to handle the hue wrap-around at 0°/180°:
+
+```python
+# Lower red (0-10°)
+lower_red1 = np.array([0, 100, 100])
+upper_red1 = np.array([10, 255, 255])
+
+# Upper red (170-180°)
+lower_red2 = np.array([170, 100, 100])
+upper_red2 = np.array([180, 255, 255])
+```
+
+### Processing Pipeline
+
+1. Convert BGR to HSV color space
+2. Create binary masks for both red ranges
+3. Combine masks with OR operation
+4. Apply morphological open (remove noise)
+5. Apply morphological close (fill holes)
+6. Find contours in processed image
+7. Calculate moment (center of mass) for largest contour
+8. Return center (cx, cy) and area
+
+### Key Functions
+
+```python
 def detect_ball(frame):
-    """Detect colored ball using HSV threshold."""
+    """
+    Detect red ball in frame.
+    
+    Args:
+        frame: BGR image from camera
+        
+    Returns:
+        cx, cy: center coordinates (or None if not detected)
+        area: contour area (or 0 if not detected)
+    """
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     
-    # Create masks for red (two ranges due to wrap-around)
-    mask1 = cv2.inRange(hsv, LOWER_RED, UPPER_RED)
-    mask2 = cv2.inRange(hsv, LOWER_RED2, UPPER_RED2)
-    mask = mask1 | mask2
+    mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
+    mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
+    mask = cv2.bitwise_or(mask1, mask2)
     
-    # Morphological operations
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     
-    # Find contours
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
     if not contours:
-        return None, None
+        return None, None, 0
     
-    # Find largest contour
     largest = max(contours, key=cv2.contourArea)
     area = cv2.contourArea(largest)
     
-    if area < 100:  # Min pixel area
-        return None, None
+    if area < 100:  # Minimum area threshold
+        return None, None, 0
     
-    # Get circle (moments)
     M = cv2.moments(largest)
-    if M['m00'] > 0:
-        cx = int(M['m10'] / M['m00'])
-        cy = int(M['m01'] / M['m00'])
-        return (cx, cy), area
+    if M["m00"] == 0:
+        return None, None, 0
     
-    return None, None
-
-# ============================================================================
-# MAIN LOOP
-# ============================================================================
-
-def main():
-    cap = cv2.VideoCapture(0)
+    cx = int(M["m10"] / M["m00"])
+    cy = int(M["m01"] / M["m00"])
     
-    print("[BALL] Ball detection started (red color)")
-    
-    try:
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-            
-            center, area = detect_ball(frame)
-            
-            if center:
-                cx, cy = center
-                cv2.circle(frame, (cx, cy), int(np.sqrt(area)/np.pi), (0, 255, 0), 2)
-                cv2.putText(frame, f'Ball: ({cx}, {cy})', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                print(f"[BALL] Center: {center}, Area: {area}")
-            
-            cv2.imshow('Ball Detection', frame)
-            
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-            
-            cv2.waitKey(33)  # ~30 Hz
-    
-    finally:
-        cap.release()
-        cv2.destroyAllWindows()
+    return cx, cy, area
+```
 
-if __name__ == '__main__':
-    main()
+### Tuning Parameters
 
-ball_detect.py summary: OpenCV-based color tracking using HSV. Converts camera frame to HSV, creates mask for target color (red), finds largest contour, returns center point and area. Adjustable color range for different ball colors. Runs at ~30 FPS. Can trigger "chase" or "kick" behaviors in demo.py.
+- **Hue range:** Adjust 0-10 and 170-180 for different red shades
+- **Saturation:** 100-255 (adjust lower value for lighter colors)
+- **Value:** 100-255 (adjust lower value for darker environments)
+- **Kernel size:** (5, 5) for morphological operations
+- **Min area:** 100 pixels minimum for valid detection
+
+### Integration with demo.py
+
+Ball detection runs in camera thread, updates ball position at ~30 Hz:
+
+```python
+cx, cy, area = detect_ball(frame)
+if cx is not None and area > 100:
+    log_ball_position(cx, cy, area)
+```
+
+### Debugging
+
+Visualize detection with:
+
+```python
+cv2.imshow('HSV', hsv)
+cv2.imshow('Mask', mask)
+cv2.imshow('Detection', frame)
+cv2.waitKey(1)
+```
+
+### Common Issues
+
+- **False positives:** Tighten saturation/value thresholds
+- **Missed detections:** Lower saturation/value thresholds
+- **Jitter:** Increase minimum area threshold
+- **Lighting sensitivity:** Adjust value (brightness) range
