@@ -1,50 +1,88 @@
-# odie_rerun.py — ODIE Mind Visualizer
+python
+#!/usr/bin/env python3
+"""
+ODIE Rerun Dashboard - Real-time telemetry visualization
+Logs robot state, IMU data, servo positions, mode, and performance metrics
+"""
 
-Real-time telemetry dashboard for ODIE V3, powered by the [Rerun SDK](https://rerun.io). Streams live robot data to any browser — no install needed on the viewing device.
+import rerun as rr
+import numpy as np
+from datetime import datetime
 
-## What it does
+# ============================================================================
+# RERUN INITIALIZATION
+# ============================================================================
 
-Starts a gRPC server on the Pi and streams all robot data to the Rerun web viewer. Open the printed URL on any device on the same network to see ODIE's mind live.
+def init_dashboard():
+    """Initialize Rerun dashboard."""
+    rr.init("ODIE Demo", spawn=True)
+    rr.log("world", rr.ViewCoordinates.RDF)
+    print("[RERUN] Dashboard initialized")
 
-## Data streams
+# ============================================================================
+# LOGGING FUNCTIONS
+# ============================================================================
 
-| Path | Type | Description |
-|------|------|-------------|
-| `odie/servos/<name>` | Scalar | Individual joint angle (degrees) for all 12 servos |
-| `odie/servos/all` | BarChart | All 12 joint angles as a bar chart |
-| `odie/imu/pitch` | Scalar | Pitch angle from MPU6050 (degrees) |
-| `odie/imu/roll` | Scalar | Roll angle from MPU6050 (degrees) |
-| `odie/imu/fell` | Scalar | Fall detection — 1.0 if pitch or roll exceeds ±45° |
-| `odie/behavior` | TextLog | Current behavior mode (stand, walk, sit, wave, etc.) |
-| `odie/ball/detected` | Scalar | 1.0 if ball is currently tracked, 0.0 otherwise |
-| `odie/ball/position` | Points2D | Ball position in 320×240 camera space |
-| `odie/robot` | URDF | Full 3D robot model loaded from URDF + OBJ meshes |
+def log_imu_data(timestamp, ax, ay, az, gx, gy, gz):
+    """Log IMU accelerometer and gyroscope data."""
+    accel = np.array([ax, ay, az])
+    gyro = np.array([gx, gy, gz])
+    
+    rr.log(f"imu/accel/magnitude", rr.Scalar(np.linalg.norm(accel)))
+    rr.log(f"imu/accel/x", rr.Scalar(ax))
+    rr.log(f"imu/accel/y", rr.Scalar(ay))
+    rr.log(f"imu/accel/z", rr.Scalar(az))
+    
+    rr.log(f"imu/gyro/x", rr.Scalar(gx))
+    rr.log(f"imu/gyro/y", rr.Scalar(gy))
+    rr.log(f"imu/gyro/z", rr.Scalar(gz))
 
-## Serial inputs
+def log_servo_angles(angles):
+    """Log all 12 servo angles."""
+    rr.log("servos/all", rr.Bars(values=angles, label_values=[f"S{i}" for i in range(12)]))
+    
+    # Log by leg
+    rr.log("servos/FL_hip", rr.Scalar(angles[0]))
+    rr.log("servos/FL_knee", rr.Scalar(angles[1]))
+    rr.log("servos/FR_hip", rr.Scalar(angles[3]))
+    rr.log("servos/RR_hip", rr.Scalar(angles[6]))
+    rr.log("servos/RL_hip", rr.Scalar(angles[9]))
 
-Reads two serial ports simultaneously in background threads:
+def log_mode(mode_name):
+    """Log current movement mode."""
+    rr.log("status/mode", rr.TextLog(mode_name))
 
-- **Servo2040** — `angles:<ch0>,...,<ch11>` lines for joint telemetry, `Mode:<mode>` for behavior state
-- **IMU Pico** — `<pitch>,<roll>` CSV lines at 50Hz
+def log_fall_detected():
+    """Log fall detection event."""
+    rr.log("status/fall_alert", rr.TextLog("FALL DETECTED - Returning to STAND"))
 
-## How to run
+def log_battery(voltage):
+    """Log battery voltage (if available)."""
+    rr.log("power/battery_v", rr.Scalar(voltage))
 
-```bash
-python3 odie_rerun.py
-```
+def log_fps(fps):
+    """Log control loop FPS."""
+    rr.log("performance/control_fps", rr.Scalar(fps))
 
-Then open the printed URL in any browser:
+def log_inference_time(ms):
+    """Log model inference time."""
+    rr.log("performance/inference_ms", rr.Scalar(ms))
 
-https://app.rerun.io/?url=rerun+http://<PI_IP>:9876/proxy
+# ============================================================================
+# DASHBOARD LAYOUT
+# ============================================================================
 
-## Dependencies
+def setup_layout():
+    """Configure Rerun dashboard layout."""
+    rr.log(
+        "world",
+        rr.BarChart(
+            values=[90, 120, 45, 90, 60, 135, 90, 60, 135, 90, 120, 45],
+        ),
+    )
 
-```bash
-sudo pip install rerun-sdk numpy pyserial opencv-python --break-system-packages
-```
+if __name__ == '__main__':
+    init_dashboard()
+    print("[RERUN] Use this module's functions in demo.py to log data")
 
-## Notes
-
-- The URDF path and serial port IDs are hardcoded — update them if running on a different machine
-- The gRPC server buffers up to 1GiB of data so late-connecting viewers get full history
-- Run alongside `ball_detect_cv.py` or `controller.py` for full telemetry
+odie_rerun.py summary: Rerun telemetry logging functions. Provides wrappers to log IMU data (accel/gyro), servo angles, current mode, fall alerts, battery voltage, and performance metrics. Called from demo.py during main loop. Creates live dashboards for monitoring robot state in real-time.
