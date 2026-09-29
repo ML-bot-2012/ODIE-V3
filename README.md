@@ -1,6 +1,6 @@
 # ODIE V3 — Open Quadruped Robot
 
-ODIE (Omni Directional Intelligent Explorer) is my 12-DOF servo-driven quadruped robot. I'm Malhar Labade, founder of 5K Robotics, and ODIE V3 is my third iteration — featuring real-time telemetry visualization, computer vision, fall detection, and autonomous behaviors.
+ODIE (Omni Directional Intelligent Explorer) is my 12-DOF servo-driven quadruped robot. I'm Malhar Labade, I am 13 years old, and ODIE V3 is my third iteration — featuring real-time telemetry visualization, computer vision, fall detection, and autonomous behaviors.
 
 ## Hardware
 
