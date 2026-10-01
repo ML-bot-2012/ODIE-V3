@@ -1,4 +1,4 @@
-# hardware.md – Bill of Materials & Assembly
+# Hardware.md – Bill of Materials & Assembly
 
 ### FULL ASSEMBLED BOT:
 <img width="3024" height="4032" alt="image" src="https://github.com/user-attachments/assets/7a7ff718-cbf8-492a-81a9-21e529e7995b" />
