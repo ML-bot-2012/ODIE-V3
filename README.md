@@ -2,6 +2,8 @@
 
 ODIE (Omni Directional Intelligent Explorer) is my 12-DOF servo-driven quadruped robot. I'm Malhar Labade, I am 13 years old, and ODIE V3 is my third iteration — featuring real-time telemetry visualization, computer vision, fall detection, and autonomous behaviors.
 
+<img width="4284" height="5712" alt="wave" src="https://github.com/user-attachments/assets/016efc00-6d1b-48e3-8d31-06f462f6267f" />
+
 ## Hardware
 
 - **Brain**: Raspberry Pi 5
