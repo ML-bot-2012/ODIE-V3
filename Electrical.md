@@ -1,4 +1,4 @@
-# electrical.md – Power & PCB Design
+# Electrical.md – Power & PCB Design
 
 ## External Power Supply
 
