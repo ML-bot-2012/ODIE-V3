@@ -31,8 +31,7 @@ from stable_baselines3.common.callbacks import CheckpointCallback
 
 GAIT_FREQ = 1.0
 HIP_AMP = 0.25
-KNEE_OFF = 0.10
-KNEE_LIFT = 0.25
+KNEE_LIFT = 0.15
 RESID = 0.10
 TARGET_VX = 0.5
 CTRL_DT = 0.02
@@ -55,10 +54,13 @@ def cycloid_lift(p):
     return math.sin(p) if p < math.pi else 0.0
 
 def trot_ref(phase):
+    # Joint order per leg: hip (0), knee (1), ankle (2). Legs: FL, RR, FR, RL.
     pa, pb = phase, phase + math.pi
-    ha, ka = -HIP_AMP*math.sin(pa), KNEE_OFF + KNEE_LIFT*cycloid_lift(pa)
-    hb, kb = HIP_AMP*math.sin(pb), KNEE_OFF + KNEE_LIFT*cycloid_lift(pb)
-    return np.array([0, ha, ka, 0, ha, ka, 0, hb, kb, 0, hb, kb], dtype=np.float64)
+    ha = -HIP_AMP*math.sin(pa)
+    ka = KNEE_LIFT*cycloid_lift(pa)
+    hb = HIP_AMP*math.sin(pb)
+    kb = KNEE_LIFT*cycloid_lift(pb)
+    return np.array([ha, ka, 0, ha, ka, 0, hb, kb, 0, hb, kb, 0], dtype=np.float64)
 
 class ODIETrainEnv(gym.Env):
     def __init__(self, gait_type="walk", show_viewer=False):
