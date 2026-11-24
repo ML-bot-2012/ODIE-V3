@@ -36,7 +36,7 @@ The first line of output is the settled standing height, for example `settled st
 
 | Index | Contents |
 |---|---|
-| 0–11 | Joint angles (`qpos[7:19]`) |
+| 0–11 | Joint angles (`qpos[7:19]`), hip/knee/ankle per leg |
 | 12–23 | Joint velocities (`qvel[6:18]`) |
 | 24–27 | Body orientation quaternion (`qpos[3:7]`) |
 | 28–30 | Body angular velocity (`qvel[3:6]`) |
@@ -70,6 +70,6 @@ An episode ends on fall or after 500 steps.
 
 ### Known gaps
 
-- **Joint layout mismatch.** `robot.xml.md` in this repo has hip, knee, and ankle joints per leg. The trained policies assume shoulder, hip, and knee per leg (index 0 of each leg is a shoulder). Until `robot.xml` matches the trained model, the policy can't be replayed on this repo's robot model.
+- **Old policies.** Policies trained with the earlier scripts assumed a shoulder layout. Don't load them into this trainer.
 - **Gait values are first-pass.** `GAIT_FREQ`, `HIP_AMP`, `KNEE_LIFT`, and `RESID` have not been tuned in sim.
 - **Deployment obs must match.** The robot-side code must send the same 45 values in the same order.
