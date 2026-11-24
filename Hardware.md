@@ -11,9 +11,10 @@
 | Part | Qty | Specs | Cost | Source |
 |------|-----|-------|------|--------|
 | Raspberry Pi 5 | 1 | 8GB RAM, BCM2712 | $80 | Adafruit/PiHut |
+| Hailo-8L AI HAT/NPU | 1 | 13 TOPS, YOLOv8 inference over USB | TBD | Hailo |
 | Pimoroni Servo2040 | 1 | RP2040, 18 PWM channels | $25 | Pimoroni |
 | Raspberry Pi Pico | 1 | RP2040, MicroPython | $5 | Official |
-| **Subtotal** | | | **$110** | |
+| **Subtotal** | | | **$110 + Hailo-8L** | |
 
 ### Servo Actuators
 
@@ -61,7 +62,9 @@
 | Pi active cooler | 1 | Optional (for YOLOv8 loads) | $12 | Amazon |
 | **Subtotal** | | | **$29** | |
 
-### **TOTAL BOM: ~$400**
+### **TOTAL BOM: ~$400 + Hailo-8L (price TBD)**
+
+Person detection also runs on the Pi 5 CPU with Ultralytics YOLOv8n (see `person_detect.md`), so the Hailo-8L is optional for that path.
 
 ---
 
