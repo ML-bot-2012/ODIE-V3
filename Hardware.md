@@ -10,8 +10,8 @@
 
 | Part | Qty | Specs | Cost | Source |
 |------|-----|-------|------|--------|
-| Raspberry Pi 5 | 1 | 8GB RAM, BCM2712 | $80 | Adafruit/PiHut |
-| Hailo-8L AI HAT/NPU | 1 | 13 TOPS, YOLOv8 inference over USB | TBD | Hailo |
+| Raspberry Pi 5 | 1 | 16GB RAM, BCM2712 | $80 | Adafruit/PiHut |
+| Raspberry Pi AI HAT+ (Hailo-8L) | 1 | 13 TOPS, mounts on Pi 5 PCIe, YOLOv8 inference | TBD | Raspberry Pi |
 | Pimoroni Servo2040 | 1 | RP2040, 18 PWM channels | $25 | Pimoroni |
 | Raspberry Pi Pico | 1 | RP2040, MicroPython | $5 | Official |
 | **Subtotal** | | | **$110 + Hailo-8L** | |
@@ -95,7 +95,7 @@ ODIE V3 Chassis
 │ └── [same as FL, ch9-11]
 │
 ├── Electronics Bay (central)
-│ ├── Raspberry Pi 5 (8GB)
+│ ├── Raspberry Pi 5 (16GB)
 │ │ ├── USB hub (camera, input)
 │ │ └── 5V power from PSU
 │ │
@@ -117,7 +117,7 @@ ODIE V3 Chassis
 │
 └── Sensors & I/O
 ├── USB camera (mounted on head)
-├── Hailo-8L NPU (via USB)
+├── Raspberry Pi AI HAT+ (Hailo-8L, PCIe)
 └── PS3 controller (wireless)
 
 
@@ -203,7 +203,8 @@ ODIE V3 Chassis
 - [ ] Connect jumper wires (I2C: Servo2040 ↔ Pico)
 - [ ] Connect PSU power wires to Pimoroni VCC/GND rail
 - [ ] Mount USB camera on head bracket
-- [ ] Connect USB hub (camera, Hailo NPU)
+- [ ] Connect USB hub (camera)
+- [ ] Seat AI HAT+ on Pi 5 PCIe (if used)
 - [ ] Test servo movement (one channel at a time)
 - [ ] Calibrate servo centers (reset90 command)
 - [ ] Verify IMU I2C communication
