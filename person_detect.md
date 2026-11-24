@@ -1,172 +1,95 @@
-# person_detect.md
+# person_detect.md – Person Detection (YOLOv8n)
 
-## Person Detection with Hailo-8L
+Detects people in the camera feed and reports the count and a wave trigger. Runs on a Mac or the Pi 5 CPU with Ultralytics. No Hailo required.
 
-YOLOv8 inference on Hailo-8L NPU for real-time person detection.
-
-### Overview
-
-Uses Hailo-8L AI accelerator to run YOLOv8 model for detecting people in video frames. Outputs bounding boxes filtered for person class (ID 0) with confidence threshold.
-
-### Setup
-
-Install Hailo runtime and model:
+## Setup
 
 ```bash
-pip install hailo-sdk
-# Download YOLOv8n model compiled for Hailo
-# Place in: models/yolov8n_hailo.hef
+pip install ultralytics opencv-python flask
 ```
 
-### Person Detection Function
+The first run downloads `yolov8n.pt` (about 6 MB) automatically.
+
+## Script (`odie_vision_flask.py`)
 
 ```python
-def detect_persons(frame, confidence_threshold=0.5):
-    """
-    Detect persons in frame using YOLOv8 on Hailo-8L.
-    
-    Args:
-        frame: BGR image from camera
-        confidence_threshold: Min confidence (0.0-1.0)
-        
-    Returns:
-        List of dicts with:
-            - x, y: Top-left corner
-            - w, h: Width, height
-            - confidence: Detection confidence
-    """
-    # Preprocess for model
-    h, w = frame.shape[:2]
-    blob = cv2.dnn.blobFromImage(frame, 1/255.0, (640, 640))
-    
-    # Run inference
-    net = cv2.dnn.readNetFromHailo('models/yolov8n_hailo.hef')
-    net.setInput(blob)
-    detections = net.forward()
-    
-    persons = []
-    
-    for detection in detections:
-        # detection: [x_center, y_center, w, h, confidence, class_probs...]
-        confidence = detection[4]
-        class_id = np.argmax(detection[5:])
-        class_conf = detection[5 + class_id]
-        
-        # Filter for person class (0) and confidence
-        if class_id != 0 or confidence * class_conf < confidence_threshold:
-            continue
-        
-        # Convert to bounding box
-        x_center = int(detection[0] * w)
-        y_center = int(detection[1] * h)
-        box_w = int(detection[2] * w)
-        box_h = int(detection[3] * h)
-        
-        x = x_center - box_w // 2
-        y = y_center - box_h // 2
-        
-        persons.append({
-            'x': x,
-            'y': y,
-            'w': box_w,
-            'h': box_h,
-            'confidence': float(confidence * class_conf),
-        })
-    
-    return persons
-```
+import os, threading, time, cv2
+from flask import Flask, Response, jsonify
+from ultralytics import YOLO
 
-### Model Details
+WAVE_SECS = 5
+COOLDOWN = 10
 
-**YOLOv8n (Nano):**
-- Input: 640×640 RGB
-- Output: 8400 detections (x_center, y_center, w, h, conf, 80 class probs)
-- Latency: ~20-30ms on Hailo-8L
-- Memory: ~100MB
+model = YOLO("yolov8n.pt")
+cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+lock = threading.Lock()
+state = {"jpg": None, "msg": "Standing"}
+wave_until = 0
+next_wave_at = 0
 
-**COCO Classes:**
-- Class 0: person
-- Class 1-79: other objects
-
-### Integration with demo.py
-
-```python
-import person_detect
-
-def vision_thread():
-    """Background thread for person detection."""
-    cap = cv2.VideoCapture(0)
-    
+def detect_loop():
+    global wave_until, next_wave_at
     while True:
-        ret, frame = cap.read()
-        if not ret:
+        ok, frame = cap.read()
+        if not ok:
+            time.sleep(0.05)
             continue
-        
-        persons = person_detect.detect_persons(frame, confidence_threshold=0.5)
-        
-        # Log detections
-        for person in persons:
-            rr.log(
-                f"vision/person_{person['x']}",
-                rr.BoundingBox(
-                    x=person['x'], y=person['y'],
-                    w=person['w'], h=person['h']
-                )
-            )
-        
-        time.sleep(0.03)  # ~30 Hz
+        r = model(frame, classes=[0], conf=0.4, verbose=False)[0]
+        n = 0
+        for b in r.boxes:
+            x1, y1, x2, y2 = map(int, b.xyxy[0])
+            score = float(b.conf[0])
+            n += 1
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(frame, f"person {score:.2f}", (x1, max(y1 - 5, 12)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+        now = time.time()
+        if n >= 1 and now >= next_wave_at:
+            wave_until = now + WAVE_SECS
+            next_wave_at = wave_until + COOLDOWN
+        msg = "Waving..." if now < wave_until else "Standing"
+        cv2.putText(frame, f"People: {n}", (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
+        cv2.putText(frame, msg, (10, 60),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
+        _, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
+        with lock:
+            state["jpg"] = buf.tobytes()
+            state["msg"] = msg
+
+app = Flask(__name__)
+
+@app.route("/video_feed")
+def video_feed():
+    def gen():
+        while True:
+            with lock:
+                jpg = state["jpg"]
+            if jpg:
+                yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + jpg + b"\r\n"
+            time.sleep(0.03)
+    return Response(gen(), mimetype="multipart/x-mixed-replace; boundary=frame")
+
+@app.route("/status")
+def status():
+    with lock:
+        return jsonify({"msg": state["msg"]})
+
+threading.Thread(target=detect_loop, daemon=True).start()
+app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), threaded=True)
 ```
 
-### Post-Processing
+## Run
 
-```python
-def filter_persons(persons, nms_threshold=0.5):
-    """
-    Apply Non-Maximum Suppression to remove duplicate detections.
-    """
-    if not persons:
-        return []
-    
-    boxes = np.array([[p['x'], p['y'], p['x'] + p['w'], p['y'] + p['h']] 
-                      for p in persons])
-    confidences = np.array([p['confidence'] for p in persons])
-    
-    indices = cv2.dnn.NMSBoxes(
-        boxes.tolist(),
-        confidences.tolist(),
-        score_threshold=0.5,
-        nms_threshold=nms_threshold
-    )
-    
-    return [persons[i] for i in indices.flatten()]
+```bash
+PORT=5001 python3 odie_vision_flask.py
 ```
 
-### Performance
+Open `http://localhost:5001` (or the Pi's IP on that port). Port 5000 is used by AirPlay Receiver on macOS, so use another port there.
 
-- **Throughput:** ~30 FPS on Hailo-8L
-- **Latency:** 20-30ms per frame
-- **Power:** <2W on Hailo-8L
-- **Model size:** 100MB
-- **Memory:** ~500MB working set
+## Notes
 
-### Tuning Parameters
-
-```python
-confidence_threshold = 0.5      # Min person confidence
-nms_threshold = 0.4             # NMS overlap threshold
-input_size = 640                # Model input resolution
-inference_backend = 'hailo'     # 'hailo' or 'cpu'
-```
-
-### Common Issues
-
-- **No detections:** Lower confidence_threshold (0.3-0.4)
-- **False positives:** Raise confidence_threshold (0.6-0.7)
-- **Slow inference:** Use Hailo backend instead of CPU
-- **Memory error:** Reduce frame size or batch size
-
-### References
-
-- Hailo documentation: https://www.hailo.ai/
-- YOLOv8: https://docs.ultralytics.com/models/yolov8/
-- COCO dataset: https://cocodataset.org/
+- The wave state only changes the on-screen status. It does not send a `wave` command to the Servo2040; connect the Pi serial port to make the robot wave.
+- `WAVE_SECS` and `COOLDOWN` control how long the wave shows and how long before it can trigger again.
