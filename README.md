@@ -9,9 +9,9 @@ ODIE (Omni Directional Intelligent Explorer) is my 12-DOF servo-driven quadruped
 - **Brain**: Raspberry Pi 5 (16GB)
 - **Servo Controller**: Pimoroni Servo2040 (12 servos, MicroPython)
 - **IMU**: MPU6050 on a separate Raspberry Pi Pico (pitch/roll/fall detection)
-- **Vision**: USB camera; YOLOv8n person detection on the Pi 5 CPU (Raspberry Pi AI HAT+ with Hailo-8L on PCIe optional, price TBD)
+- **Vision**: USB camera; YOLOv8n person detection on the Pi 5 CPU; Raspberry Pi AI HAT+ (Hailo-8L, PCIe) is part of the build, price TBD
 - **Legs**: 12× MG996R servos (3 per leg: hip, knee, ankle)
-- **Power**: External 5V/10A PSU
+- **Power**: External 5V/10A PSU (no LiPo)
 
 ## Software Stack
 
@@ -20,7 +20,7 @@ ODIE (Omni Directional Intelligent Explorer) is my 12-DOF servo-driven quadruped
 | `main.py` | MicroPython firmware for Servo2040 — gaits, behaviors, serial protocol |
 | `odie_rerun.py` | Live telemetry dashboard via Rerun SDK (servos, IMU, URDF, ball detection) |
 | `ball_detect_cv.py` | OpenCV HSV ball tracker with Flask web dashboard |
-| `person_detect.py` | YOLOv8n person detection on the Pi 5 CPU — ODIE waves on first detection |
+| `person_detect.py` | YOLOv8n person detection on the Pi 5 CPU — ODIE sits on first detection |
 | `controller.py` | PS3 controller input via pygame with fall detection |
 | `demo.py` | Unified launcher — switch between modes from one terminal |
 
@@ -33,7 +33,7 @@ ODIE (Omni Directional Intelligent Explorer) is my 12-DOF servo-driven quadruped
 - **Wave** — weight shift + front leg wave
 - **Dance** — rhythmic body oscillation
 - **Ball tracking** — HSV detection, head follows ball
-- **Person greeting** — YOLOv8 detects person, ODIE sits and waves
+- **Person greeting** — YOLOv8 detects person, ODIE sits
 
 ## Telemetry (Rerun)
 
