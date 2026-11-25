@@ -91,5 +91,6 @@ Open `http://localhost:5001` (or the Pi's IP on that port). Port 5000 is used by
 
 ## Notes
 
-- The wave state only changes the on-screen status. It does not send a `wave` command to the Servo2040; connect the Pi serial port to make the robot wave.
+- This script only updates the on-screen status. It does not send any command to the Servo2040.
+- On the robot, a person detection triggers the sit action. That control code is not in this script yet, so it needs to be documented here before the repo matches the robot.
 - `WAVE_SECS` and `COOLDOWN` control how long the wave shows and how long before it can trigger again.
