@@ -1,6 +1,6 @@
 # person_detect.md – Person Detection (YOLOv8n)
 
-Detects people in the camera feed and reports the count and a wave trigger. Runs on a Mac or the Pi 5 CPU with Ultralytics. No Hailo required.
+Detects people in the camera feed, reports the count, and sets a wave status on screen. Runs on a Mac or the Pi 5 CPU with Ultralytics. The Hailo-8L AI HAT+ is not used by this script.
 
 ## Setup
 
