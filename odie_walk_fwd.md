@@ -139,7 +139,7 @@ This creates forward thrust during both phases.
 python3 odie_walk_fwd.py
 ```
 
-Robot walks continuously forward at ~0.2 m/s (estimated) using diagonal trot.
+Target: continuous forward walk at ~0.2 m/s (estimated, not measured) using a diagonal trot.
 
 ### Customization
 
