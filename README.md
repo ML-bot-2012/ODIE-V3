@@ -11,7 +11,7 @@ ODIE (Omni Directional Intelligent Explorer) is my 12-DOF servo-driven quadruped
 - **IMU**: MPU6050 on a separate Raspberry Pi Pico (pitch/roll/fall detection)
 - **Vision**: USB camera; YOLOv8n person detection on the Pi 5 CPU (Raspberry Pi AI HAT+ with Hailo-8L on PCIe optional, price TBD)
 - **Legs**: 12× MG996R servos (3 per leg: hip, knee, ankle)
-- **Power**: External 5V/10A PSU (no LiPo)
+- **Power**: External 5V/10A PSU
 
 ## Software Stack
 
