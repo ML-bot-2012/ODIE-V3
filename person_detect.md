@@ -23,7 +23,7 @@ Before running, check that:
 - `hailortcli fw-control identify` reports the Hailo-8L.
 - Nothing else is on port 5000. `ball_detect_cv.py` uses the same port, so run only one at a time.
 
-## CPU script: setup
+## Setup
 
 ```bash
 pip install ultralytics opencv-python flask
@@ -108,9 +108,4 @@ app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), threaded=True)
 PORT=5001 python3 odie_vision_flask.py
 ```
 
-Open `http://localhost:5001` (or the Pi's IP on that port). Port 5000 is used by AirPlay Receiver on macOS, so use another port there.
-
-## Notes
-
-- This script only updates the on-screen status. It does not send any command to the Servo2040.
-- `WAVE_SECS` and `COOLDOWN` control how long the wave shows and how long before it can trigger again.
+Open `http://localhost:5001` (or the Pi's IP on that port). 
