@@ -193,12 +193,15 @@ def main():
                     serial_mgr.servo_port = serial.Serial(SERVO_PORT, BAUD_RATE, timeout=0.01)
 
                 if mode == 'ball':
+                    # Stop the person script and free the serial port for ball_detect_cv.py
                     subprocess.run(['pkill', '-f', 'hailo_odie.py'])
+                    serial_mgr.servo_port.close()
                     ball_process = subprocess.Popen(['bash', '-c', BALL_CMD_TEXT])
                 elif ball_process:
                     ball_process.terminate()
                     ball_process.wait(timeout=5)
                     ball_process = None
+                    serial_mgr.servo_port = serial.Serial(SERVO_PORT, BAUD_RATE, timeout=0.01)
                 
                 rerun.log_mode(mode)
             
