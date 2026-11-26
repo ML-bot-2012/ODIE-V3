@@ -45,12 +45,12 @@
 
 | Part | Qty | Type | Cost | Source |
 |------|-----|------|------|--------|
-| 3D printed chassis | 1 | PLA main body | $20 | Printed in-house |
-| 3D printed legs | 4 | PLA femur/tibia | $15 | Printed in-house |
-| 3D printed hip brackets | 4 | PLA servo mounts | $8 | Printed in-house |
-| TPU feet grippers | 4 | Shoe-style grippers | $10 | 3D printed or purchased |
-| M3 hardware | 100x | Bolts, nuts, washers | $8 | AliExpress |
-| Zipties | 50x | Cable management | $2 | Amazon |
+| 3D printed chassis | 1 | PLA main body | <$5 | Printed in-house |
+| 3D printed legs | 4 | PLA femur/tibia | <$5 | Printed in-house |
+| 3D printed hip brackets | 4 | PLA servo mounts | <$5 | Printed in-house |
+| TPU feet grippers | 4 | Shoe-style grippers | <$5 | 3D printed or purchased |
+| M3 hardware | 100x | Bolts, nuts, washers | <$5 | AliExpress |
+| Zipties | 50x | Cable management | <$5 | Amazon |
 | **Subtotal** | | | **$63** | |
 
 ### Miscellaneous
@@ -59,7 +59,7 @@
 |------|-----|---------|------|--------|
 | USB hub | 1 | Camera + controller | $12 | Amazon |
 | HDMI micro cable | 1 | Display (dev) | $5 | Amazon |
-| Pi active cooler | 1 | Optional (for YOLOv8 loads) | $12 | Amazon |
+| Pi active cooler | 1 | Optional | $12 | Amazon |
 | **Subtotal** | | | **$29** | |
 
 ### **TOTAL BOM: ~$400 + Hailo-8L (price TBD)**
@@ -324,13 +324,13 @@ GND ──────black─────→ GND
 ### Schematic (Simple)
 
 ```text
-Pico VBUS (+5V) ──[10µF]──┬──[1µF]── GND
+Pico VBUS (+5V) ────┬──── GND
 │
 MPU6050 VCC
 │
-GPIO4 (SDA) ──[4.7k]──┬──────── MPU6050 SDA
+GPIO4 (SDA) ────┬──────── MPU6050 SDA
 │
-GPIO5 (SCL) ──[4.7k]──┼──────── MPU6050 SCL
+GPIO5 (SCL) ────┼──────── MPU6050 SCL
 │
 +5V
 ```
@@ -341,8 +341,6 @@ GPIO5 (SCL) ──[4.7k]──┼──────── MPU6050 SCL
 | Part | Qty | Purpose |
 |------|-----|---------|
 | MPU6050 breakout board | 1 | Pre-soldered, simplifies assembly |
-| Pull-up resistors 4.7k | 2 | I2C pull-ups (some boards have built-in) |
-| Bypass capacitors | 2 | 10µF + 1µF for power supply ripple |
 
 **Note**: Use MPU6050 breakout board (Amazon $5) instead of raw IC. Eliminates soldering, includes voltage regulator.
 
