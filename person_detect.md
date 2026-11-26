@@ -1,6 +1,6 @@
 # person_detect.md – Person Detection (YOLOv8n)
 
-The robot's person greeting runs on the Hailo-8L AI HAT+ in `hailo_odie.py`. The CPU script further down is a fallback for a Mac or the Pi 5 CPU. It only updates the on-screen status and does not command the robot.
+Person detection runs on the Hailo-8L AI HAT+. The robot's greeting is `hailo_odie.py`. The Flask script further down (`odie_vision_flask.py`) is not the robot's detection path and does not command the robot.
 
 ## Robot script (`hailo_odie.py`)
 
@@ -23,7 +23,7 @@ Before running, check that:
 - `hailortcli fw-control identify` reports the Hailo-8L.
 - Nothing else is on port 5000. `ball_detect_cv.py` uses the same port, so run only one at a time.
 
-## CPU fallback: setup
+## CPU script: setup
 
 ```bash
 pip install ultralytics opencv-python flask
