@@ -113,5 +113,4 @@ Open `http://localhost:5001` (or the Pi's IP on that port). Port 5000 is used by
 ## Notes
 
 - This script only updates the on-screen status. It does not send any command to the Servo2040.
-- The CPU script never sends a serial command. Use `hailo_odie.py` for anything that moves the robot.
 - `WAVE_SECS` and `COOLDOWN` control how long the wave shows and how long before it can trigger again.
