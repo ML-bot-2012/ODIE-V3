@@ -35,4 +35,5 @@ cd ~/hailo-rpi5-examples && source setup_env.sh && python3 hailo_odie.py --input
 Before running, check that:
 - `ls /dev/serial/by-id` shows the Servo2040 at `usb-MicroPython_Board_in_FS_mode_e66598541b222033-if00`.
 - `hailortcli fw-control identify` reports the Hailo-8L.
-- Nothing else is on port 5000. `ball_detect_cv.py` uses the same port, so run only one at a time.
+- Stop anything else using the camera or port 5000 first. `ball_detect_cv.py` also uses `/dev/video0` and port 5000, so it can't run at the same time. Stop it with `pkill -f ball_detect_cv.py`.
+- The Servo2040 serial port can only be open in one program. Stop `demo.py` or any other script that holds it.
