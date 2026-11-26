@@ -21,7 +21,6 @@ ODIE (Omni Directional Intelligent Explorer) is my 12-DOF servo-driven quadruped
 | `odie_rerun.py` | Live telemetry dashboard via Rerun SDK (servos, IMU, URDF, ball detection) |
 | `ball_detect_cv.py` | OpenCV HSV ball tracker with Flask web dashboard |
 | `hailo_odie.py` | Hailo YOLOv8 person detection — ODIE waves for 10 s on detection, then stands, and repeats |
-| `person_detect.py` | YOLOv8n person detection on a Mac or the Pi 5 CPU (fallback, no robot commands) |
 | `controller.py` | PS3 controller input via pygame with fall detection |
 | `demo.py` | Unified launcher — switch between modes from one terminal |
 
