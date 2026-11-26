@@ -1,8 +1,29 @@
 # person_detect.md – Person Detection (YOLOv8n)
 
-Detects people in the camera feed, reports the count, and sets a wave status on screen. Runs on a Mac or the Pi 5 CPU with Ultralytics. The Hailo-8L AI HAT+ is not used by this script.
+The robot's person greeting runs on the Hailo-8L AI HAT+ in `hailo_odie.py`. The CPU script further down is a fallback for a Mac or the Pi 5 CPU. It only updates the on-screen status and does not command the robot.
 
-## Setup
+## Robot script (`hailo_odie.py`)
+
+This script runs on the Pi 5. It uses the Hailo-8L AI HAT+ for YOLOv8 person detection and sends commands to the Servo2040 over USB serial.
+
+- On startup it sends `stand`.
+- On the first person detection (confidence above 0.4), it sends `wave` and shows "Sitting & waving" for 10 seconds. It sends only `wave`; the "sit" in the comments is not sent.
+- After 10 seconds it sends `stand` and waits 3 seconds.
+- If someone is still in view, the cycle repeats. If no one is in view, it sends `stand` and stays standing.
+- It serves a status page on port 5000 with the camera feed and a status line.
+
+Run on the Pi:
+
+```bash
+cd ~/hailo-rpi5-examples && source setup_env.sh && python3 hailo_odie.py --input /dev/video0
+```
+
+Before running, check that:
+- `ls /dev/serial/by-id` shows the Servo2040 at `usb-MicroPython_Board_in_FS_mode_e66598541b222033-if00`.
+- `hailortcli fw-control identify` reports the Hailo-8L.
+- Nothing else is on port 5000. `ball_detect_cv.py` uses the same port, so run only one at a time.
+
+## CPU fallback: setup
 
 ```bash
 pip install ultralytics opencv-python flask
@@ -92,5 +113,5 @@ Open `http://localhost:5001` (or the Pi's IP on that port). Port 5000 is used by
 ## Notes
 
 - This script only updates the on-screen status. It does not send any command to the Servo2040.
-- On the robot, a person detection triggers the sit action. That control code is not in this script yet, so it needs to be documented here before the repo matches the robot.
+- The CPU script never sends a serial command. Use `hailo_odie.py` for anything that moves the robot.
 - `WAVE_SECS` and `COOLDOWN` control how long the wave shows and how long before it can trigger again.
