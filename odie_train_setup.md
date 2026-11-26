@@ -66,9 +66,3 @@ The gait ramps in over the first 50 steps (1 second) so the robot doesn't tip on
 | `−50` on fall | Fall: height drop of 0.25 or tilt past 60° |
 
 An episode ends on fall or after 500 steps.
-
-### Known gaps
-
-- **Old policies.** Policies trained with the earlier scripts assumed a shoulder layout. Don't load them into this trainer.
-- **Gait values are first-pass.** `GAIT_FREQ`, `HIP_AMP`, `KNEE_LIFT`, and `RESID` have not been tuned in sim.
-- **Deployment obs must match.** The robot-side code must send the same 45 values in the same order.
