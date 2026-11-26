@@ -2,8 +2,7 @@
 
 Setup, run steps, and what the trainer's observation, action, and reward mean. The code is in `odie_train.md`.
 
-Status: the standing pose holds with no policy in the sim. A walking policy has not been verified yet.
-
+ 
 ### Folder
 
 Run from the folder that contains `scene.xml`. The script loads `scene.xml` by relative path.
