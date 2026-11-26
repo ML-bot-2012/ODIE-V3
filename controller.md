@@ -17,7 +17,7 @@ MODEL_MAP = {
     'sit': 'sit',             # Triangle button
     'wave': 'wave',           # Square button
     'dance': 'dance',         # O button
-    'person': None,           # R1 - runs hailo_odie.py, see person_detect.md
+    'person': None,           # typed in console - runs hailo_odie.py, see person_detect.md
     'reset90': None,          # L1 - no model, direct servo
 }
 
@@ -30,7 +30,6 @@ BUTTON_MAP = {
     'SQUARE': 'wave',
     'CIRCLE': 'dance',
     'L1': 'reset90',
-    'R1': 'person',
 }
 ```
 
@@ -45,7 +44,6 @@ BUTTON_CODES = {
     2: 'TRIANGLE',       # Triangle / Y
     3: 'SQUARE',         # Square / A
     4: 'L1',             # LB
-    5: 'R1',             # RB
     6: 'L2',             # LT
     7: 'R2',             # RT
     8: 'SHARE',          # Back
