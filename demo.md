@@ -113,6 +113,7 @@ def main():
     imu_reader.start()
     
     model_process = None
+    person_process = None
     current_mode = 'stand'
     stand_pose = [90, 120, 45, 90, 60, 135, 90, 60, 135, 90, 120, 45]
     sit_pose = [90, 120, 45, 90, 60, 135, 90, 60, 0, 90, 120, 180]
@@ -142,6 +143,17 @@ def main():
                 
                 if MODEL_MAP[mode] is not None:
                     model_process = ModelProcess(MODEL_MAP[mode])
+
+                if mode == 'person':
+                    # Stop the camera and serial users; hailo_odie.py takes both
+                    subprocess.run(['pkill', '-f', 'ball_detect_cv.py'])
+                    serial_mgr.servo_port.close()
+                    person_process = subprocess.Popen(['bash', '-c', PERSON_CMD_TEXT])
+                elif person_process:
+                    person_process.terminate()
+                    person_process.wait(timeout=5)
+                    person_process = None
+                    serial_mgr.servo_port = serial.Serial(SERVO_PORT, BAUD_RATE, timeout=0.01)
                 
                 rerun.log_mode(mode)
             
@@ -167,8 +179,6 @@ def main():
             if current_mode == 'reset90':
                 angles = [90] * 12
                 serial_mgr.send_servo_angles(angles)
-            elif current_mode == 'sit':
-                serial_mgr.send_servo_angles(sit_pose)
             elif current_mode == 'stand':
                 serial_mgr.send_servo_angles(stand_pose)
             elif model_process and model_process.is_running():
@@ -209,11 +219,14 @@ BAUD_RATE = 115200
 MODEL_MAP = {
     'walk': 'walk',
     'stand': 'walk',
-    'sit': 'walk',
-    'wave': 'walk',
+    'sit': 'sit',
+    'wave': 'wave',
     'dance': 'dance',
+    'person': None,      # runs hailo_odie.py, see person_detect.md
     'reset90': None,
 }
+
+PERSON_CMD_TEXT = 'cd ~/hailo-rpi5-examples && source setup_env.sh && python3 hailo_odie.py --input /dev/video0'
 
 STAND_POSE = [90, 120, 45, 90, 60, 135, 90, 60, 135, 90, 120, 45]
 SIT_POSE = [90, 120, 45, 90, 60, 135, 90, 60, 0, 90, 120, 180]
@@ -230,6 +243,6 @@ python3 demo.py
 ```
 
 Outputs:
-- Rerun dashboard (http://localhost:8050)
+- Rerun dashboard (port 9876)
 - Console logs for mode switches, falls, FPS
 - Servo angles to Servo2040 at 100 Hz
