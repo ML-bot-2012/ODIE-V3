@@ -11,7 +11,7 @@
 | Part | Qty | Specs | Cost | Source |
 |------|-----|-------|------|--------|
 | Raspberry Pi 5 | 1 | 16GB RAM, BCM2712 | $80 | Adafruit/PiHut |
-| Raspberry Pi AI HAT+ (Hailo-8L) | 1 | 13 TOPS, mounts on Pi 5 PCIe, YOLOv8 inference | TBD | Raspberry Pi |
+| Raspberry Pi AI HAT+ (Hailo-8L) | 1 | 13 TOPS, mounts on Pi 5 PCIe | TBD | Raspberry Pi |
 | Pimoroni Servo2040 | 1 | RP2040, 18 PWM channels | $25 | Pimoroni |
 | Raspberry Pi Pico | 1 | RP2040, MicroPython | $5 | Official |
 | **Subtotal** | | | **$110 + Hailo-8L** | |
@@ -64,12 +64,13 @@
 
 ### **TOTAL BOM: ~$400 + Hailo-8L (price TBD)**
 
-Person detection also runs on the Pi 5 CPU with Ultralytics YOLOv8n (see `person_detect.md`), so the Hailo-8L is optional for that path.
+Person detection runs on the Hailo-8L AI HAT+ (`hailo_odie.py`, see `person_detect.md`). The HAT is part of the build, not optional.
 
 ---
 
 ## Assembly Tree
 
+```text
 ODIE V3 Chassis
 ├── Frame (3D printed PLA)
 │ ├── Main body (central plate)
@@ -101,7 +102,7 @@ ODIE V3 Chassis
 │ │
 │ ├── Pimoroni Servo2040
 │ │ ├── 18 PWM channels → servo headers
-│ │ ├── UART to Pi5 (jumper wires)
+│ │ ├── USB serial to Pi5 (USB cable)
 │ │ └── GND to Pi5
 │ │
 │ ├── Pico IMU Board
@@ -119,6 +120,7 @@ ODIE V3 Chassis
 ├── USB camera (mounted on head)
 ├── Raspberry Pi AI HAT+ (Hailo-8L, PCIe)
 └── PS3 controller (wireless)
+```
 
 
 ---
@@ -199,21 +201,18 @@ ODIE V3 Chassis
 - [ ] Mount brackets on chassis frame
 - [ ] Route servo cables through clips
 - [ ] Mount Pi5, Servo2040, Pico on central tray
-- [ ] Connect jumper wires (UART: Pi5 ↔ Servo2040)
+- [ ] Connect USB cable (Pi5 ↔ Servo2040)
 - [ ] Connect jumper wires (I2C: Servo2040 ↔ Pico)
 - [ ] Connect PSU power wires to Pimoroni VCC/GND rail
 - [ ] Mount USB camera on head bracket
 - [ ] Connect USB hub (camera)
-- [ ] Seat AI HAT+ on Pi 5 PCIe (if used)
+- [ ] Seat AI HAT+ on Pi 5 PCIe
 - [ ] Test servo movement (one channel at a time)
 - [ ] Calibrate servo centers (reset90 command)
 - [ ] Verify IMU I2C communication
 - [ ] Run stand.py to confirm all 12 servos respond
 
-EOF
-markdown
-cat > electrical.md << 'EOF'
-# electrical.md – Power & PCB Design
+## Electrical Details (see also Electrical.md)
 
 ## External Power Supply
 
@@ -236,6 +235,7 @@ cat > electrical.md << 'EOF'
 
 ## Power Wiring (Simplified)
 
+```text
 5V/10A USB-C PSU
 ↓
 Female barrel jack (5.5×2.1mm)
@@ -248,6 +248,7 @@ Pimoroni distributes:
 └─→ Pi5 (5V GPIO header or USB-C)
 
 [All GND connected at Servo2040]
+```
 
 
 ### Current Budget
@@ -262,25 +263,24 @@ Pimoroni distributes:
 
 ---
 
-## Signal Wiring (Jumper Wires)
+## Signal Wiring (USB Serial)
 
-### Pi5 ↔ Servo2040 (UART)
+### Pi5 ↔ Servo2040 (USB Serial)
 
-Raspberry Pi 5 Pimoroni Servo2040
-GPIO14 (TXD) ──yellow──→ GPIO0 (RX)
-GPIO15 (RXD) ←──orange── GPIO1 (TX)
-GND ──────black────────→ GND
+- Pi5 USB-A port → Servo2040 USB micro-B port (USB cable, direct or via USB hub)
 
 
 **Baud**: 115200, 8N1
 
 ### Servo2040 ↔ Pico (I2C)
 
+```text
 Servo2040 Pico IMU Board
 GPIO4 (SDA) ──blue──→ GPIO4 (SDA)
 GPIO5 (SCL) ──green─→ GPIO5 (SCL)
 GND ──────black─────→ GND
 +5V ──────red──────→ VBUS
+```
 
 
 **I2C Address**: MPU6050 at 0x68 (AD0 = GND)
@@ -291,6 +291,7 @@ GND ──────black─────→ GND
 
 ### Layout (matches image above)
 
+```text
 ┌─────────────────────────────────┐
 │ Raspberry Pi Pico RP2040 │
 │ │
@@ -318,10 +319,12 @@ GND ──────black─────→ GND
 │ [Status LED on GPIO25] │
 │ │
 └─────────────────────────────────┘
+```
 
 
 ### Schematic (Simple)
 
+```text
 Pico VBUS (+5V) ──[10µF]──┬──[1µF]── GND
 │
 MPU6050 VCC
@@ -331,6 +334,7 @@ GPIO4 (SDA) ──[4.7k]──┬──────── MPU6050 SDA
 GPIO5 (SCL) ──[4.7k]──┼──────── MPU6050 SCL
 │
 +5V
+```
 
 
 ### Components (Minimal)
@@ -371,7 +375,7 @@ Max cable length: 1m (capacitive loading on PWM ≤1µF OK)
 2. **Barrel jack powers Servo2040** (VCC + GND rails energized)
 3. **Pi5 boots** from GPIO 5V (or USB-C with separate charger)
 4. **Pico boots** from VBUS (connected to Servo2040 VCC)
-5. **UART handshake** (Pi5 → Servo2040)
+5. **USB serial handshake** (Pi5 → Servo2040)
 6. **I2C scan** (Servo2040 queries MPU6050 at 0x68)
 7. **Ready** (accept motion commands)
 
