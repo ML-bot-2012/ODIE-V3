@@ -1,5 +1,20 @@
 # person_detect.md – Person Detection (YOLOv8n)
 
+Person detection runs on the Hailo-8L AI HAT+. The robot's greeting is `hailo_odie.py`. Nothing else in this file runs on the robot.
+
+## Install (once, on the Pi 5)
+
+Clone and install Hailo's example repo, then copy `hailo_odie.py` into it:
+
+```bash
+cd ~
+git clone https://github.com/hailo-ai/hailo-rpi5-examples.git
+cd hailo-rpi5-examples
+./install.sh
+./download_resources.sh
+```
+
+Run `hailo_odie.py` from this folder, after `source setup_env.sh` (see Run below).
 
 ## Robot script (`hailo_odie.py`)
 
@@ -21,90 +36,3 @@ Before running, check that:
 - `ls /dev/serial/by-id` shows the Servo2040 at `usb-MicroPython_Board_in_FS_mode_e66598541b222033-if00`.
 - `hailortcli fw-control identify` reports the Hailo-8L.
 - Nothing else is on port 5000. `ball_detect_cv.py` uses the same port, so run only one at a time.
-
-## Setup
-
-```bash
-pip install ultralytics opencv-python flask
-```
-
-The first run downloads `yolov8n.pt` (about 6 MB) automatically.
-
-## Script (`odie_vision_flask.py`)
-
-```python
-import os, threading, time, cv2
-from flask import Flask, Response, jsonify
-from ultralytics import YOLO
-
-WAVE_SECS = 5
-COOLDOWN = 10
-
-model = YOLO("yolov8n.pt")
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-lock = threading.Lock()
-state = {"jpg": None, "msg": "Standing"}
-wave_until = 0
-next_wave_at = 0
-
-def detect_loop():
-    global wave_until, next_wave_at
-    while True:
-        ok, frame = cap.read()
-        if not ok:
-            time.sleep(0.05)
-            continue
-        r = model(frame, classes=[0], conf=0.4, verbose=False)[0]
-        n = 0
-        for b in r.boxes:
-            x1, y1, x2, y2 = map(int, b.xyxy[0])
-            score = float(b.conf[0])
-            n += 1
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(frame, f"person {score:.2f}", (x1, max(y1 - 5, 12)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-        now = time.time()
-        if n >= 1 and now >= next_wave_at:
-            wave_until = now + WAVE_SECS
-            next_wave_at = wave_until + COOLDOWN
-        msg = "Waving..." if now < wave_until else "Standing"
-        cv2.putText(frame, f"People: {n}", (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
-        cv2.putText(frame, msg, (10, 60),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
-        _, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
-        with lock:
-            state["jpg"] = buf.tobytes()
-            state["msg"] = msg
-
-app = Flask(__name__)
-
-@app.route("/video_feed")
-def video_feed():
-    def gen():
-        while True:
-            with lock:
-                jpg = state["jpg"]
-            if jpg:
-                yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + jpg + b"\r\n"
-            time.sleep(0.03)
-    return Response(gen(), mimetype="multipart/x-mixed-replace; boundary=frame")
-
-@app.route("/status")
-def status():
-    with lock:
-        return jsonify({"msg": state["msg"]})
-
-threading.Thread(target=detect_loop, daemon=True).start()
-app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), threaded=True)
-```
-
-## Run
-
-```bash
-PORT=5001 python3 odie_vision_flask.py
-```
-
-Open `http://localhost:5001` (or the Pi's IP on that port). 
