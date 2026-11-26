@@ -33,8 +33,15 @@ import subprocess
 import threading
 import time
 import serial
+import queue
+import sys
 import rerun  # logging wrapper, see odie_rerun.md (placeholder import)
 from controller import GamepadController  # see controller.md
+
+def console_reader(cmds):
+    # Reads typed commands: controller | ball | person | stop | quit
+    for line in sys.stdin:
+        cmds.put(line.strip())
 
 def get_model_output(model_process):
     # Placeholder: read one line of 12 joint angles from the model's stdout.
@@ -130,6 +137,10 @@ def main():
     
     model_process = None
     person_process = None
+    ball_process = None
+    typed_mode = None
+    console_cmds = queue.Queue()
+    threading.Thread(target=console_reader, args=(console_cmds,), daemon=True).start()
     current_mode = 'stand'
     stand_pose = [90, 120, 45, 90, 60, 135, 90, 60, 135, 90, 120, 45]
     sit_pose = [90, 120, 45, 90, 60, 135, 90, 60, 0, 90, 120, 180]
@@ -145,8 +156,20 @@ def main():
             iteration += 1
             loop_start = time.time()
             
-            # 1. Read gamepad
+            # 1. Read the console (typed command) or the gamepad
             mode = controller.update()
+            try:
+                typed = console_cmds.get_nowait()
+            except queue.Empty:
+                typed = None
+            if typed == 'quit':
+                break
+            if typed == 'controller':
+                typed_mode = None
+            elif typed in ('person', 'ball', 'stop'):
+                typed_mode = typed
+            if typed_mode:
+                mode = typed_mode
             
             # 2. Mode switching logic
             if mode != current_mode:
@@ -168,6 +191,14 @@ def main():
                     person_process.wait(timeout=5)
                     person_process = None
                     serial_mgr.servo_port = serial.Serial(SERVO_PORT, BAUD_RATE, timeout=0.01)
+
+                if mode == 'ball':
+                    subprocess.run(['pkill', '-f', 'hailo_odie.py'])
+                    ball_process = subprocess.Popen(['bash', '-c', BALL_CMD_TEXT])
+                elif ball_process:
+                    ball_process.terminate()
+                    ball_process.wait(timeout=5)
+                    ball_process = None
                 
                 rerun.log_mode(mode)
             
@@ -206,6 +237,10 @@ def main():
     finally:
         if model_process:
             model_process.terminate()
+        if person_process:
+            person_process.terminate()
+        if ball_process:
+            ball_process.terminate()
         imu_reader.stop()
         serial_mgr.servo_port.close()
         serial_mgr.imu_port.close()
@@ -224,11 +259,14 @@ MODEL_MAP = {
     'sit': 'sit',
     'wave': 'wave',
     'dance': 'dance',
-    'person': None,      # runs hailo_odie.py, see person_detect.md
+    'person': None,      # typed 'person' - runs hailo_odie.py, see person_detect.md
+    'ball': None,        # typed 'ball' - runs ball_detect_cv.py, see ball_detect_cv.md
+    'stop': None,        # typed 'stop' - no model, servos idle
     'reset90': None,
 }
 
 PERSON_CMD_TEXT = 'cd ~/hailo-rpi5-examples && source setup_env.sh && python3 hailo_odie.py --input /dev/video0'
+BALL_CMD_TEXT = 'python3 ball_detect_cv.py'
 
 STAND_POSE = [90, 120, 45, 90, 60, 135, 90, 60, 135, 90, 120, 45]
 SIT_POSE = [90, 120, 45, 90, 60, 135, 90, 60, 0, 90, 120, 180]
