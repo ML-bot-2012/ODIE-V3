@@ -1,6 +1,12 @@
 # ball_detect.md
 
-Before running: stop `hailo_odie.py` (or any other script using the camera). Both scripts use `/dev/video0` and the Servo2040 serial port, and this script also uses port 5000. Run `pkill -f hailo_odie.py` first if it is running.
+Before running: kill all Python processes so nothing else holds the camera, the Servo2040 serial port, or port 5000:
+
+```bash
+pkill -f python3
+```
+
+Run this only when you start this script by hand, not from `demo.py`. `demo.py` is also a Python process, so `pkill -f python3` stops it too.
 
 
 ## Ball Detection with OpenCV
