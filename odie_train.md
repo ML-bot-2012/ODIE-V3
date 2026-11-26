@@ -2,7 +2,6 @@
 
 Trains a walking policy in MuJoCo with stable-baselines3 PPO. Run from the folder that contains `scene.xml`.
 
-Status: not yet verified to walk in sim. The standing pose holds with no policy (see the stand test). Gait ramp and amplitudes are first-pass values.
 
 Setup:
 
