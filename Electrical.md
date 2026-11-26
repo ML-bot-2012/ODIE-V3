@@ -41,7 +41,7 @@
 | Component | Idle | Active | Notes |
 |-----------|------|--------|-------|
 | 12× MG996R servos | 0.6 A | 6.0 A | Peak all swing simultaneously |
-| Raspberry Pi 5 | 0.5 A | 2.5 A | Full CPU + GPU (YOLOv8) |
+| Raspberry Pi 5 | 0.5 A | 2.5 A | Full CPU for Serial Tasks|
 | Servo2040 + Pico | 0.15 A | 0.3 A | MCU overhead |
 | USB hub + camera | 0.2 A | 0.5 A | Camera stream 30fps |
 | **Total** | **1.45 A** | **9.35 A** | PSU 10A (5% headroom) |
@@ -58,7 +58,7 @@
 
 **Protocol:** 115200 baud, 8N1
 
-![Servo2040 Terminal Layout](https://github.com/user-attachments/assets/a0842b76-f98d-42ff-bf20-5bf6054a5b1b)
+<img width="1912" height="1434" alt="image" src="https://github.com/user-attachments/assets/5daafe53-0ba3-4c08-a0a6-20617118f3b5" />
 
 **Terminals 1–12:** Servo PWM + power connectors (servos powered by PSU rail)
 
