@@ -29,7 +29,7 @@
 
 **Servo2040 distributes to:**
 - Servo header rail (12× MG996R via JST connectors)
-- Pico (5V GPIO/VBUS)
+- Pico IMU (powered over its USB cable from Pi 5)
 - Pi5 (5V GPIO header or separate USB-C charger)
 
 **Ground:** All systems tied to common Servo2040 GND
@@ -58,7 +58,7 @@
 
 **Protocol:** 115200 baud, 8N1
 
-<img width="1912" height="1434" alt="image" src="https://github.com/user-attachments/assets/5daafe53-0ba3-4c08-a0a6-20617118f3b5" />
+![Servo2040 Terminal Layout](https://github.com/user-attachments/assets/a0842b76-f98d-42ff-bf20-5bf6054a5b1b)
 
 **Terminals 1–12:** Servo PWM + power connectors (servos powered by PSU rail)
 
@@ -98,7 +98,8 @@
 |-----------|---------------|---------|
 | Pi5 ↔ Servo2040 | USB serial | Motion command protocol |
 | Servo2040 ↔ Servos | PWM + power | Leg actuation (12 channels) |
-| Pi Pico ↔ MPU6050 | I2C | IMU telemetry (accel, gyro) |
+| Pi5 ↔ Pico IMU | USB serial | IMU telemetry (pitch, roll) |
+| Pi Pico ↔ MPU6050 | I2C | IMU sensor read (accel, gyro) |
 | All | +5V power | Fed from single PSU barrel jack |
 
 ---
@@ -128,7 +129,7 @@ Max cable length: 1m
 1. PSU switched on (USB-C → 5V DC)
 2. Barrel jack powers Servo2040 (VCC + GND rails energized)
 3. Pi5 boots from GPIO 5V (or separate USB-C charger)
-4. Pico boots from VBUS (Servo2040 VCC)
+4. Pico boots from its USB cable (powered by Pi 5)
 5. USB handshake (Pi5 → Servo2040 serial port)
 6. I2C scan (Pico queries MPU6050 at 0x68)
 7. Ready (accept motion commands)
