@@ -1,5 +1,8 @@
 # ball_detect.md
 
+Before running: stop `hailo_odie.py` (or any other script using the camera). Both scripts use `/dev/video0` and the Servo2040 serial port, and this script also uses port 5000. Run `pkill -f hailo_odie.py` first if it is running.
+
+
 ## Ball Detection with OpenCV
 
 HSV color-based ball tracking for real-time detection and position estimation.
