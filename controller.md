@@ -14,9 +14,10 @@ Reads gamepad input (DPAD, buttons, sticks) at 100 Hz main loop rate. Maps butto
 MODEL_MAP = {
     'walk': 'walk',           # DPAD up/left/right
     'stand': 'walk',          # X button
-    'sit': 'walk',            # Triangle button
-    'wave': 'walk',           # Square button
+    'sit': 'sit',             # Triangle button
+    'wave': 'wave',           # Square button
     'dance': 'dance',         # O button
+    'person': None,           # R1 - runs hailo_odie.py, see person_detect.md
     'reset90': None,          # L1 - no model, direct servo
 }
 
@@ -29,6 +30,7 @@ BUTTON_MAP = {
     'SQUARE': 'wave',
     'CIRCLE': 'dance',
     'L1': 'reset90',
+    'R1': 'person',
 }
 ```
 
