@@ -10,7 +10,6 @@ Central orchestration for gamepad input, model switching, IMU feedback, servo co
 - Gamepad mode selection
 - PPO model subprocess management
 - Background IMU reader thread
-- Fall detection logic
 - Serial communication with Servo2040 and IMU Pico
 - Rerun telemetry dashboard
 
@@ -25,6 +24,23 @@ demo.py (main loop @ 100 Hz)
 
 
 ### Key Classes
+
+#### Imports and placeholders
+
+```python
+import math
+import subprocess
+import threading
+import time
+import serial
+import rerun  # logging wrapper, see odie_rerun.md (placeholder import)
+from controller import GamepadController  # see controller.md
+
+def get_model_output(model_process):
+    # Placeholder: read one line of 12 joint angles from the model's stdout.
+    # Returns a list of 12 servo angles, or None if no output yet.
+    return None
+```
 
 #### SerialManager
 
@@ -118,8 +134,6 @@ def main():
     stand_pose = [90, 120, 45, 90, 60, 135, 90, 60, 135, 90, 120, 45]
     sit_pose = [90, 120, 45, 90, 60, 135, 90, 60, 0, 90, 120, 180]
     
-    fall_detected = False
-    fall_threshold = 60  # degrees
     
     rerun.init("ODIE Demo")
     
@@ -162,18 +176,6 @@ def main():
             if imu:
                 rerun.log_imu_data(imu)
                 
-                # Fall detection
-                pitch = math.degrees(math.atan2(imu['ay'], imu['az']))
-                roll = math.degrees(math.atan2(imu['ax'], imu['az']))
-                
-                if abs(pitch) > fall_threshold or abs(roll) > fall_threshold:
-                    if not fall_detected:
-                        fall_detected = True
-                        current_mode = 'stand'
-                        serial_mgr.send_servo_angles(stand_pose)
-                        rerun.log_fall_detected()
-                else:
-                    fall_detected = False
             
             # 4. Get servo angles
             if current_mode == 'reset90':
@@ -231,7 +233,6 @@ PERSON_CMD_TEXT = 'cd ~/hailo-rpi5-examples && source setup_env.sh && python3 ha
 STAND_POSE = [90, 120, 45, 90, 60, 135, 90, 60, 135, 90, 120, 45]
 SIT_POSE = [90, 120, 45, 90, 60, 135, 90, 60, 0, 90, 120, 180]
 
-FALL_THRESHOLD = 60  # degrees
 MODE_SWITCH_DELAY = 0.5  # seconds
 CONTROL_RATE = 100  # Hz
 ```
@@ -244,5 +245,5 @@ python3 demo.py
 
 Outputs:
 - Rerun dashboard (port 9876)
-- Console logs for mode switches, falls, FPS
+- Console logs for mode switches and FPS
 - Servo angles to Servo2040 at 100 Hz
