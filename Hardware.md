@@ -255,7 +255,7 @@ Pimoroni distributes:
 | Component | Idle | Active | Notes |
 |-----------|------|--------|-------|
 | 12× MG996R servos | 0.6 A | 6.0 A | Peak all swing simultaneously |
-| Raspberry Pi 5 | 0.5 A | 2.5 A | Full CPU + GPU (YOLOv8) |
+| Raspberry Pi 5 | 0.5 A | 2.5 A | Full CPU for Serial Tasks|
 | Servo2040 + Pico | 0.15 A | 0.3 A | MCU overhead |
 | USB hub + camera | 0.2 A | 0.5 A | Camera stream 30fps |
 | **Total** | **1.45 A** | **9.35 A** | PSU 10A (5% headroom) |
