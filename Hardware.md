@@ -271,16 +271,6 @@ Pimoroni distributes:
 
 **Baud**: 115200, 8N1
 
-### Servo2040 ↔ Pico (I2C)
-
-```text
-Servo2040 Pico IMU Board
-GPIO4 (SDA) ──blue──→ GPIO4 (SDA)
-GPIO5 (SCL) ──green─→ GPIO5 (SCL)
-GND ──────black─────→ GND
-+5V ──────red──────→ VBUS
-```
-
 
 **I2C Address**: MPU6050 at 0x68 (AD0 = GND)
 
