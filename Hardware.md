@@ -11,7 +11,7 @@
 | Part | Qty | Specs | Cost | Source |
 |------|-----|-------|------|--------|
 | Raspberry Pi 5 | 1 | 16GB RAM, BCM2712 | $80 | Adafruit/PiHut |
-| Raspberry Pi AI HAT+ (Hailo-8L) | 1 | 13 TOPS, mounts on Pi 5 PCIe | TBD | Raspberry Pi |
+| Raspberry Pi AI HAT+ (Hailo-8L) | 1 | 13 TOPS, mounts on Pi 5 PCIe | $70 | Raspberry Pi |
 | Pimoroni Servo2040 | 1 | RP2040, 18 PWM channels | $25 | Pimoroni |
 | Raspberry Pi Pico | 1 | RP2040, MicroPython | $5 | Official |
 | **Subtotal** | | | **$110 + Hailo-8L** | |
@@ -64,8 +64,7 @@
 
 ### **TOTAL BOM: ~$400 + Hailo-8L (price TBD)**
 
-Person detection runs on the Hailo-8L AI HAT+ (`hailo_odie.py`, see `person_detect.md`). The HAT is part of the build, not optional.
-
+Person detection runs on the Hailo-8L AI HAT+ (`hailo_odie.py`, see `person_detect.md`). 
 ---
 
 ## Assembly Tree
