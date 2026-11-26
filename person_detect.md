@@ -1,6 +1,5 @@
 # person_detect.md – Person Detection (YOLOv8n)
 
-Person detection runs on the Hailo-8L AI HAT+. The robot's greeting is `hailo_odie.py`. The Flask script further down (`odie_vision_flask.py`) is not the robot's detection path and does not command the robot.
 
 ## Robot script (`hailo_odie.py`)
 
