@@ -11,7 +11,7 @@
 | Part | Qty | Specs | Cost | Source |
 |------|-----|-------|------|--------|
 | Raspberry Pi 5 | 1 | 16GB RAM, BCM2712 | $80 | Adafruit/PiHut |
-| Raspberry Pi AI HAT+ (Hailo-8L) | 1 | 13 TOPS, mounts on Pi 5 PCIe | $70 | Raspberry Pi |
+| Raspberry Pi AI HAT+ (Hailo-8L) | 1 | 13 TOPS, mounts on Pi 5 PCIe | TBD | Raspberry Pi |
 | Pimoroni Servo2040 | 1 | RP2040, 18 PWM channels | $25 | Pimoroni |
 | Raspberry Pi Pico | 1 | RP2040, MicroPython | $5 | Official |
 | **Subtotal** | | | **$110 + Hailo-8L** | |
@@ -45,12 +45,12 @@
 
 | Part | Qty | Type | Cost | Source |
 |------|-----|------|------|--------|
-| 3D printed chassis | 1 | PLA main body | <$5 | Printed in-house |
-| 3D printed legs | 4 | PLA femur/tibia | <$5 | Printed in-house |
-| 3D printed hip brackets | 4 | PLA servo mounts | <$5 | Printed in-house |
-| TPU feet grippers | 4 | Shoe-style grippers | <$5 | 3D printed or purchased |
-| M3 hardware | 100x | Bolts, nuts, washers | <$5 | AliExpress |
-| Zipties | 50x | Cable management | <$5 | Amazon |
+| 3D printed chassis | 1 | PLA main body | $20 | Printed in-house |
+| 3D printed legs | 4 | PLA femur/tibia | $15 | Printed in-house |
+| 3D printed hip brackets | 4 | PLA servo mounts | $8 | Printed in-house |
+| TPU feet grippers | 4 | Shoe-style grippers | $10 | 3D printed or purchased |
+| M3 hardware | 100x | Bolts, nuts, washers | $8 | AliExpress |
+| Zipties | 50x | Cable management | $2 | Amazon |
 | **Subtotal** | | | **$63** | |
 
 ### Miscellaneous
@@ -59,12 +59,13 @@
 |------|-----|---------|------|--------|
 | USB hub | 1 | Camera + controller | $12 | Amazon |
 | HDMI micro cable | 1 | Display (dev) | $5 | Amazon |
-| Pi active cooler | 1 | Optional | $12 | Amazon |
+| Pi active cooler | 1 | Optional (for YOLOv8 loads) | $12 | Amazon |
 | **Subtotal** | | | **$29** | |
 
 ### **TOTAL BOM: ~$400 + Hailo-8L (price TBD)**
 
-Person detection runs on the Hailo-8L AI HAT+ (`hailo_odie.py`, see `person_detect.md`). 
+Person detection runs on the Hailo-8L AI HAT+ (`hailo_odie.py`, see `person_detect.md`). The HAT is part of the build, not optional.
+
 ---
 
 ## Assembly Tree
@@ -104,10 +105,10 @@ ODIE V3 Chassis
 │ │ ├── USB serial to Pi5 (USB cable)
 │ │ └── GND to Pi5
 │ │
-│ ├── Pico IMU Board
+│ ├── Pico IMU Board (separate board, not Pimoroni)
 │ │ ├── RP2040 Pico
 │ │ ├── MPU6050 sensor (I2C)
-│ │ ├── I2C to Servo2040 (jumper wires)
+│ │ ├── USB serial to Pi 5 (USB cable)
 │ │ └── 5V power
 │ │
 │ └── Power
@@ -201,7 +202,7 @@ ODIE V3 Chassis
 - [ ] Route servo cables through clips
 - [ ] Mount Pi5, Servo2040, Pico on central tray
 - [ ] Connect USB cable (Pi5 ↔ Servo2040)
-- [ ] Connect jumper wires (I2C: Servo2040 ↔ Pico)
+- [ ] Connect Pico IMU to Pi 5 with USB cable
 - [ ] Connect PSU power wires to Pimoroni VCC/GND rail
 - [ ] Mount USB camera on head bracket
 - [ ] Connect USB hub (camera)
@@ -209,7 +210,7 @@ ODIE V3 Chassis
 - [ ] Test servo movement (one channel at a time)
 - [ ] Calibrate servo centers (reset90 command)
 - [ ] Verify IMU I2C communication
-- [ ] Run stand.py to confirm all 12 servos respond
+- [ ] Confirm all 12 servos respond to the standing pose
 
 ## Electrical Details (see also Electrical.md)
 
@@ -243,7 +244,7 @@ Female barrel jack (5.5×2.1mm)
 
 Pimoroni distributes:
 ├─→ Servo header rail (12× MG996R)
-├─→ Pico (5V GPIO pin)
+├─→ Pico IMU (powered over its USB cable from Pi 5, not from this rail)
 └─→ Pi5 (5V GPIO header or USB-C)
 
 [All GND connected at Servo2040]
@@ -271,8 +272,12 @@ Pimoroni distributes:
 
 **Baud**: 115200, 8N1
 
+### Pi 5 ↔ Pico IMU (USB Serial)
 
-**I2C Address**: MPU6050 at 0x68 (AD0 = GND)
+- Pi 5 USB-A port → Pico USB port (USB cable)
+- Pico powered from its USB cable, not from the Servo2040
+- The Pico reads the MPU6050 over its own I2C (see IMU PCB below)
+- **I2C Address**: MPU6050 at 0x68 (AD0 = GND)
 
 ---
 
@@ -288,11 +293,6 @@ Pimoroni distributes:
 │ GPIO5 (SCL) ──┤ │
 │ VBUS (+5V) │ │
 │ GND │ │
-│ │ │
-│ ┌────┴──────┐ │
-│ │ Pull-ups │ │
-│ │ 4.7k each │ │
-│ └────┬──────┘ │
 │ │ │
 │ ┌────▼──────┐ │
 │ │ MPU6050 │ │
@@ -314,13 +314,13 @@ Pimoroni distributes:
 ### Schematic (Simple)
 
 ```text
-Pico VBUS (+5V) ────┬──── GND
+Pico VBUS (+5V) ──[10µF]──┬──[1µF]── GND
 │
 MPU6050 VCC
 │
-GPIO4 (SDA) ────┬──────── MPU6050 SDA
+GPIO4 (SDA) ──────────┬──────── MPU6050 SDA
 │
-GPIO5 (SCL) ────┼──────── MPU6050 SCL
+GPIO5 (SCL) ──────────┼──────── MPU6050 SCL
 │
 +5V
 ```
@@ -331,6 +331,7 @@ GPIO5 (SCL) ────┼──────── MPU6050 SCL
 | Part | Qty | Purpose |
 |------|-----|---------|
 | MPU6050 breakout board | 1 | Pre-soldered, simplifies assembly |
+| Bypass capacitors | 2 | 10µF + 1µF for power supply ripple |
 
 **Note**: Use MPU6050 breakout board (Amazon $5) instead of raw IC. Eliminates soldering, includes voltage regulator.
 
@@ -361,9 +362,9 @@ Max cable length: 1m (capacitive loading on PWM ≤1µF OK)
 1. **PSU switched on** (USB-C → 5V DC)
 2. **Barrel jack powers Servo2040** (VCC + GND rails energized)
 3. **Pi5 boots** from GPIO 5V (or USB-C with separate charger)
-4. **Pico boots** from VBUS (connected to Servo2040 VCC)
+4. **Pico boots** from its USB cable (powered by Pi 5)
 5. **USB serial handshake** (Pi5 → Servo2040)
-6. **I2C scan** (Servo2040 queries MPU6050 at 0x68)
+6. **I2C scan** (Pico queries MPU6050 at 0x68)
 7. **Ready** (accept motion commands)
 
 ---
