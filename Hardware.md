@@ -98,7 +98,7 @@ ODIE V3 Chassis
 ├── Electronics Bay (central)
 │ ├── Raspberry Pi 5 (16GB)
 │ │ ├── USB hub (camera, input)
-│ │ └── 5V power from PSU
+│ │ └── USB-C power from wall outlet (own supply)
 │ │
 │ ├── Pimoroni Servo2040
 │ │ ├── 18 PWM channels → servo headers
@@ -109,7 +109,7 @@ ODIE V3 Chassis
 │ │ ├── RP2040 Pico
 │ │ ├── MPU6050 sensor (I2C)
 │ │ ├── USB serial to Pi 5 (USB cable)
-│ │ └── 5V power
+│ │ └── Power over USB from Pi 5
 │ │
 │ └── Power
 │ ├── 5V/10A PSU
@@ -236,16 +236,18 @@ ODIE V3 Chassis
 ## Power Wiring (Simplified)
 
 ```text
-5V/10A USB-C PSU
+Wall outlet → Pi 5 (USB-C supply, its own power)
+├─→ USB to Pimoroni Servo2040 (powered through Pi 5 USB)
+└─→ USB to Pico IMU (powered through Pi 5 USB)
+
+5V/10A DC motor PSU
 ↓
 Female barrel jack (5.5×2.1mm)
 ├─→ Red wire (+5V) → Pimoroni Servo2040 VCC rail
 └─→ Black wire (GND) → Pimoroni Servo2040 GND rail
 
-Pimoroni distributes:
-├─→ Servo header rail (12× MG996R)
-├─→ Pico IMU (powered over its USB cable from Pi 5, not from this rail)
-└─→ Pi5 (5V GPIO header or USB-C)
+Servo2040 distributes:
+└─→ Servo header rail (12× MG996R)
 
 [All GND connected at Servo2040]
 ```
@@ -359,9 +361,9 @@ Max cable length: 1m (capacitive loading on PWM ≤1µF OK)
 
 ## Power-On Sequence
 
-1. **PSU switched on** (USB-C → 5V DC)
-2. **Barrel jack powers Servo2040** (VCC + GND rails energized)
-3. **Pi5 boots** from GPIO 5V (or USB-C with separate charger)
+1. **Pi 5 powered on** from its USB-C supply (wall outlet)
+2. **Pi 5 powers Servo2040** over USB
+3. **Motor PSU switched on** (5V DC into barrel jack, servo rail energized)
 4. **Pico boots** from its USB cable (powered by Pi 5)
 5. **USB serial handshake** (Pi5 → Servo2040)
 6. **I2C scan** (Pico queries MPU6050 at 0x68)
@@ -374,7 +376,7 @@ Max cable length: 1m (capacitive loading on PWM ≤1µF OK)
 ```bash
 ssh pi5 sudo shutdown -h now
 # Wait 10 seconds (Linux graceful halt)
-# Manually disconnect USB-C PSU
+# Manually disconnect the motor PSU and the Pi 5 USB-C supply
 ```
 
 **Critical**: Do NOT yank power (SD card corruption risk).
