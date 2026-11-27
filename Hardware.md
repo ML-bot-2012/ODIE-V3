@@ -28,7 +28,7 @@
 
 | Part | Qty | Specs | Cost | Source |
 |------|-----|-------|------|--------|
-| MPU6050 IMU breakout | 1 | 3-axis accel/gyro, I2C | $5 | AliExpress |
+| Custom IMU PCB (Pico + MPU6050) | 1 | Designed in-house, 3-axis accel/gyro, I2C | TBD | Custom PCB |
 | USB camera | 1 | 1080p 30fps, UVC | $15 | Amazon |
 | **Subtotal** | | | **$20** | |
 
@@ -283,7 +283,7 @@ Servo2040 distributes:
 
 ---
 
-## IMU PCB (Pico-based)
+## IMU PCB (custom, Pico-based)
 
 ### Layout (matches image above)
 
@@ -332,10 +332,10 @@ GPIO5 (SCL) ──────────┼──────── MPU6050 SC
 
 | Part | Qty | Purpose |
 |------|-----|---------|
-| MPU6050 breakout board | 1 | Pre-soldered, simplifies assembly |
+| MPU6050 IC | 1 | Mounted on the custom IMU PCB |
 | Bypass capacitors | 2 | 10µF + 1µF for power supply ripple |
 
-**Note**: Use MPU6050 breakout board (Amazon $5) instead of raw IC. Eliminates soldering, includes voltage regulator.
+**Note**: The IMU is a custom PCB designed in-house. It is built around a Raspberry Pi Pico and an MPU6050 IC, and it connects to the Pi 5 over USB.
 
 ---
 
